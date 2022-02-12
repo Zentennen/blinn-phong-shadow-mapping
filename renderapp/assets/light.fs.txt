@@ -1,0 +1,12 @@
+#version 330
+
+in vec2 f_texcoord;
+
+out vec4 fragColor;
+
+uniform sampler2D u_shadow;
+
+void main() {
+	float z = texture(u_shadow, f_texcoord).r;
+	fragColor = vec4(z, z, z, 1.0f);
+}

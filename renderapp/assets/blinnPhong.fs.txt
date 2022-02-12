@@ -1,0 +1,70 @@
+// triangle.fs.txt
+
+#version 330
+
+uniform sampler2D u_diffuse;
+uniform sampler2D u_shadow;
+
+uniform vec3 u_viewPosition;
+uniform vec3 u_lightPosition;
+
+uniform vec3 u_lightDirection;
+uniform vec4 u_lightAmbient;
+uniform vec4 u_lightDiffuse;
+uniform vec4 u_lightSpecular;
+
+uniform vec4 u_matAmbient;
+uniform vec4 u_matDiffuse;
+uniform vec4 u_matSpecular;
+uniform float u_shiny;
+
+in vec3 f_position;
+in vec2 f_texcoord;
+in vec3 f_normal;
+in vec4 f_lightPosition;
+
+out vec4 frag_color;
+
+bool inShadow() {
+	vec3 lightPosNDC = f_lightPosition.xyz / f_lightPosition.w;
+	vec3 lightCoord = lightPosNDC / 2.0f + 0.5f;
+	return lightCoord.z > texture(u_shadow, lightCoord.xy).r;
+}
+
+vec4 debug() { //todo
+	vec3 lightPosNDC = f_lightPosition.xyz / f_lightPosition.w;
+	vec3 lightCoord = lightPosNDC / 2.0f + 0.5f;
+	return texture(u_shadow, vec2(0.0f, 0.0f));
+}
+
+void main() {
+	// ambient
+	vec4 shading = u_matAmbient * u_lightAmbient;
+
+	if (!inShadow()) {
+		// normal vector
+		vec3 normalVec = normalize(f_normal);
+
+		// view vector
+		vec3 viewVec = normalize(u_viewPosition - f_position);
+
+		// light vector
+		vec3 lightVec = normalize(u_lightDirection);
+
+		// h vector
+		vec3 hVec = viewVec + lightVec;
+		hVec = normalize(hVec);
+
+		// vector products
+		float diffuseProduct = max(dot(lightVec, normalVec), 0.0f);
+		float specularProduct = pow(max(dot(hVec, normalVec), 0.0f), u_shiny);
+
+		// diffuse
+		shading += u_matDiffuse * diffuseProduct * u_lightDiffuse;
+
+		// specular
+		shading += u_matSpecular * specularProduct * u_lightSpecular;
+	}
+	// output color
+	frag_color = shading * texture(u_diffuse, f_texcoord);
+}

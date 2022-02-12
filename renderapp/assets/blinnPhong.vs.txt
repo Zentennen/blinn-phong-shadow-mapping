@@ -1,0 +1,30 @@
+// triangle.vs.txt
+
+#version 330
+
+layout(location=0) in vec3 a_position;
+layout(location=1) in vec3 a_normal;
+layout(location=2) in vec2 a_texcoord;
+
+uniform mat4 u_lightProjection;
+uniform mat4 u_lightView;
+uniform mat4 u_projection;
+uniform mat4 u_view;
+uniform mat4 u_objectMatrix;
+
+out vec3 f_position;
+out vec2 f_texcoord;
+out vec3 f_normal;
+out vec4 f_lightPosition;
+
+void main() {
+	gl_Position = u_projection * u_view * u_objectMatrix * vec4(a_position, 1);
+
+	mat3 normalMatrix = transpose(inverse(mat3(u_objectMatrix)));
+	vec4 pos = u_objectMatrix * vec4(a_position, 1.0f);
+
+	f_position = pos.xyz;
+	f_normal = normalize(normalMatrix * a_normal);
+	f_texcoord = a_texcoord;
+	f_lightPosition = u_lightProjection * u_lightView * pos;
+}
